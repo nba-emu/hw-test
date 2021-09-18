@@ -12,36 +12,7 @@
 
 static u16 samples[SAMPLE_COUNT * 2];
 
-static int test_count = 0;
-static int test_pass_count = 0;
-
-IWRAM_CODE void expect_range(
-  const char* name,
-  u32 expected_lo,
-  u32 expected_hi,
-  u32 actual
-) {
-  bool pass = actual >= expected_lo && actual <= expected_hi;
-
-  printf("%s: ", name);
-
-  if (pass) {
-    printf("PASS %ld\n", actual);
-    test_pass_count++;
-  } else {
-    printf("FAIL %ld\n  expected: %ld - %ld\n", actual, expected_lo, expected_hi);
-  }
-
-  test_count++;
-}
-
-IWRAM_CODE void print_metrics() {
-  if (test_pass_count == test_count) {
-    puts("\ncongratulations!");
-  } else {
-    printf("\npass:  %d\ntotal: %d\n", test_pass_count, test_count);
-  }
-}
+#include "../../../common.c"
 
 // Test when a H-blank DMA is started inside a scanline.
 IWRAM_CODE void test_hblank_dma_time() {
@@ -59,7 +30,7 @@ IWRAM_CODE void test_hblank_dma_time() {
   REG_DMA0CNT = DMA_DST_FIXED | DMA_SRC_FIXED | DMA_HBLANK | DMA16 | DMA_ENABLE | 1;
   while (REG_DMA0CNT & DMA_ENABLE) ;
 
-  // reads 992 on hardware
+  // reads 990 on hardware
   expect_range("HBL DMA", 982, 1002, cycle_count);
 }
 
@@ -147,8 +118,8 @@ IWRAM_CODE void test_hblank_irq() {
     }
   }
 
-  // reads 489 on hardware
-  expect_range("HBL IRQ", 484, 494, set);
+  // reads 490 on hardware
+  expect_range("HBL IRQ", 485, 495, set);
 }
 
 
