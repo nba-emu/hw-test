@@ -17,7 +17,7 @@ IWRAM_CODE void expect_range(
   } else if (expected_lo != expected_hi) {
     printf("FAIL %ld\n  expected: %ld - %ld\n", actual, expected_lo, expected_hi);
   } else {
-    printf("FAIL %ld\n  expected: %ld", actual, expected_lo);
+    printf("FAIL %ld\n  expected: %ld\n", actual, expected_lo);
   }
 
   test_count++;
