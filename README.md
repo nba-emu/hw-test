@@ -1,2 +1,2 @@
-# nba-hw-tests
-A collection of GBA hardware tests to measure the accuracy of emulators
+# hw-test
+GBA hardware tests that are developed to further accurate emulation. 
