@@ -11,7 +11,7 @@
 
 #define REG_POSTFLG *((vu8*)0x04000300)
 
-static volatile int counter = 0;
+/*static volatile int counter = 0;
 static u16 buffer[10];
 
 IWRAM_CODE void timer_irq_handler() {
@@ -22,6 +22,31 @@ IWRAM_CODE void timer_irq_handler() {
   if (++counter == 10) {
     irqDisable(IRQ_TIMER0);
   }
+}*/
+
+u32 _test_timer_irq_flag_nop_0();
+u32 _test_timer_irq_flag_nop_1();
+u32 _test_timer_irq_flag_nop_2();
+u32 _test_timer_irq_flag_nop_3();
+u32 _test_timer_irq_flag_nop_4();
+
+// test how many cycles until timer overflow is asserted in REG_IF
+IWRAM_CODE void test_timer_irq_flag() {
+  u32 flag_nop_0 = _test_timer_irq_flag_nop_0();
+  u32 flag_nop_1 = _test_timer_irq_flag_nop_1();
+  u32 flag_nop_2 = _test_timer_irq_flag_nop_2();
+  u32 flag_nop_3 = _test_timer_irq_flag_nop_3();
+  u32 flag_nop_4 = _test_timer_irq_flag_nop_4();
+
+  int delay = -1;
+
+  if (flag_nop_4 & 8) delay = 4;
+  if (flag_nop_3 & 8) delay = 3;
+  if (flag_nop_2 & 8) delay = 2;
+  if (flag_nop_1 & 8) delay = 1;
+  if (flag_nop_0 & 8) delay = 0;
+
+  expect("TMR0 IF", 1, delay);
 }
 
 IWRAM_CODE void test_timer_irq_halt() {
@@ -41,10 +66,10 @@ IWRAM_CODE void test_timer_irq_halt() {
 
   u16 timer_value = REG_TM0CNT_L;
 
-  printf("%04x\n\n", timer_value);
+  expect("TMR0 HALT", 32915, timer_value);
 }
 
-IWRAM_CODE void test_timer_irq_cpu_irq() {
+/*IWRAM_CODE void test_timer_irq_cpu_irq() {
   REG_TM0CNT_H = 0;
   REG_IF = 0xFFFF;
 
@@ -111,17 +136,19 @@ IWRAM_CODE void test_ppu_hblank_halt_sync_vcount() {
   u16 timer_value = REG_TM0CNT_L;
 
   printf("%d\n\n", timer_value);
-}
+}*/
 
 IWRAM_CODE int main(void) {
   consoleDemoInit();
   irqInit();
 
+  test_timer_irq_flag();
   test_timer_irq_halt();
-  test_timer_irq_cpu_irq();
-
+  /*test_timer_irq_cpu_irq();
   test_ppu_hblank_halt_sync_dispstat();
-  test_ppu_hblank_halt_sync_vcount();
+  test_ppu_hblank_halt_sync_vcount();*/
+
+  print_metrics();
 
   while (1) {
   }
