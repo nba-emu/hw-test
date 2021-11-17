@@ -69,6 +69,144 @@ IWRAM_CODE void test_timer_irq_halt() {
   expect("TMR0 HALT", 32915, timer_value);
 }
 
+IWRAM_CODE void lol_irq_handler() {
+  irqDisable(IRQ_TIMER0);
+
+  puts("lol irq :D");
+}
+
+// TODO: move this to test.s and document
+IWRAM_CODE __attribute__((naked)) void _test_disable_irq_nop_2() {
+  asm(
+    // prepare CPSR value for disabling IRQs
+    "mrs r2, cpsr\n"
+    "orr r2, #0x80\n"
+    "bic r3, r2, #0x80\n"
+    "msr cpsr_c, r3\n"
+
+    // setup timer0
+    "ldr r0, =#0x04000100\n"
+    "ldr r1, =#0x0000FFFF\n"
+    "str r1, [r0]\n"
+    "mov r1, #0xC0\n"
+    "strb r1, [r0, #2]\n"
+
+    // disable IRQs and return
+    "nop\n"
+    "nop\n"
+    "msr cpsr_c, r2\n"
+    "bx lr\n"
+  );
+}
+IWRAM_CODE __attribute__((naked)) void _test_disable_irq_nop_3() {
+  asm(
+    // prepare CPSR value for disabling IRQs
+    "mrs r2, cpsr\n"
+    "orr r2, #0x80\n"
+    "bic r3, r2, #0x80\n"
+    "msr cpsr_c, r3\n"
+
+    // setup timer0
+    "ldr r0, =#0x04000100\n"
+    "ldr r1, =#0x0000FFFF\n"
+    "str r1, [r0]\n"
+    "mov r1, #0xC0\n"
+    "strb r1, [r0, #2]\n"
+
+    // disable IRQs and return
+    "nop\n"
+    "nop\n"
+    "nop\n"
+    "msr cpsr_c, r2\n"
+    "bx lr\n"
+  );
+}
+IWRAM_CODE __attribute__((naked)) void _test_disable_irq_nop_4() {
+  asm(
+    // prepare CPSR value for disabling IRQs
+    "mrs r2, cpsr\n"
+    "orr r2, #0x80\n"
+    "bic r3, r2, #0x80\n"
+    "msr cpsr_c, r3\n"
+
+    // setup timer0
+    "ldr r0, =#0x04000100\n"
+    "ldr r1, =#0x0000FFFF\n"
+    "str r1, [r0]\n"
+    "mov r1, #0xC0\n"
+    "strb r1, [r0, #2]\n"
+
+    // disable IRQs and return
+    "nop\n"
+    "nop\n"
+    "nop\n"
+    "nop\n"
+    "msr cpsr_c, r2\n"
+    "bx lr\n"
+  );
+}
+IWRAM_CODE __attribute__((naked)) void _test_disable_irq_nop_5() {
+  asm(
+    // prepare CPSR value for disabling IRQs
+    "mrs r2, cpsr\n"
+    "orr r2, #0x80\n"
+    "bic r3, r2, #0x80\n"
+    "msr cpsr_c, r3\n"
+
+
+    // setup timer0
+    "ldr r0, =#0x04000100\n"
+    "ldr r1, =#0x0000FFFF\n"
+    "str r1, [r0]\n"
+    "mov r1, #0xC0\n"
+    "strb r1, [r0, #2]\n"
+
+    // disable IRQs and return
+    "nop\n"
+    "nop\n"
+    "nop\n"
+    "nop\n"
+    "nop\n"
+    "msr cpsr_c, r2\n"
+    "bx lr\n"
+  );
+}
+
+IWRAM_CODE void test_something() {
+  puts("nop_2");
+  REG_TM0CNT_H = 0;
+  REG_IF = 0xFFFF;
+  irqSet(IRQ_TIMER0, lol_irq_handler);
+  irqEnable(IRQ_TIMER0);
+  _test_disable_irq_nop_2();
+
+  puts("nop_3");
+  REG_TM0CNT_H = 0;
+  REG_IF = 0xFFFF;
+  irqSet(IRQ_TIMER0, lol_irq_handler);
+  irqEnable(IRQ_TIMER0);
+  _test_disable_irq_nop_3();
+
+  puts("nop_4");
+  REG_IF = 0xFFFF;
+  irqSet(IRQ_TIMER0, lol_irq_handler);
+  irqEnable(IRQ_TIMER0);
+  _test_disable_irq_nop_4();
+
+  puts("nop_5");
+  REG_IF = 0xFFFF;
+  irqSet(IRQ_TIMER0, lol_irq_handler);
+  irqEnable(IRQ_TIMER0);
+  _test_disable_irq_nop_5();
+
+
+  /*puts("nop_4");
+  _test_disable_irq_nop_4();
+
+  puts("nop_5");
+  _test_disable_irq_nop_5();*/
+}
+
 /*IWRAM_CODE void test_timer_irq_cpu_irq() {
   REG_TM0CNT_H = 0;
   REG_IF = 0xFFFF;
@@ -142,8 +280,11 @@ IWRAM_CODE int main(void) {
   consoleDemoInit();
   irqInit();
 
+  puts("revision 0");
+
   test_timer_irq_flag();
   test_timer_irq_halt();
+  test_something();
   /*test_timer_irq_cpu_irq();
   test_ppu_hblank_halt_sync_dispstat();
   test_ppu_hblank_halt_sync_vcount();*/
