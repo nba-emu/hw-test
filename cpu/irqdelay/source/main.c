@@ -153,7 +153,6 @@ IWRAM_CODE __attribute__((naked)) void _test_disable_irq_nop_5() {
     "bic r3, r2, #0x80\n"
     "msr cpsr_c, r3\n"
 
-
     // setup timer0
     "ldr r0, =#0x04000100\n"
     "ldr r1, =#0x0000FFFF\n"
@@ -188,12 +187,14 @@ IWRAM_CODE void test_something() {
   _test_disable_irq_nop_3();
 
   puts("nop_4");
+  REG_TM0CNT_H = 0;
   REG_IF = 0xFFFF;
   irqSet(IRQ_TIMER0, lol_irq_handler);
   irqEnable(IRQ_TIMER0);
   _test_disable_irq_nop_4();
 
   puts("nop_5");
+  REG_TM0CNT_H = 0;
   REG_IF = 0xFFFF;
   irqSet(IRQ_TIMER0, lol_irq_handler);
   irqEnable(IRQ_TIMER0);
@@ -280,7 +281,7 @@ IWRAM_CODE int main(void) {
   consoleDemoInit();
   irqInit();
 
-  puts("revision 0");
+  puts("revision 1");
 
   test_timer_irq_flag();
   test_timer_irq_halt();
