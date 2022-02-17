@@ -38,3 +38,7 @@ IWRAM_CODE void print_metrics() {
     printf("\npass:  %d\ntotal: %d\n", test_pass_count, test_count);
   }
 }
+
+IWRAM_CODE void IWRAM_CpuSet(const void* source, void* dest, u32 mode) {
+  SystemCall(11);
+}

@@ -66,6 +66,52 @@ IWRAM_CODE void test_haltcnt_cpuset() {
   expect("POSTFLG", 1, REG_POSTFLG);
 }
 
+__attribute__((optimize("O0"))) IWRAM_CODE void test_haltcnt_timing_iwram() {
+  u16 tmp;
+
+  REG_IME = 0;
+  REG_IE = IRQ_TIMER0;
+  REG_IF = 0xFFFF;
+  
+  // reset timer and wait until it asserted an IRQ
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START | TIMER_IRQ;
+  
+  while ((REG_IF & IRQ_TIMER0) == 0);
+
+  // reset timer again (avoid that overflow messes with the timing or anything)
+  // then enter HALT mode with the already-asserted IRQ
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  IWRAM_CpuSet(&tmp, (void*)&REG_POSTFLG, 1);
+  
+  u16 timer = REG_TM0CNT_L;
+  expect("HALTCNT TIME IWRAM", 125, timer);
+}
+
+__attribute__((optimize("O0"))) void test_haltcnt_timing_rom() {
+  u16 tmp;
+
+  REG_IME = 0;
+  REG_IE = IRQ_TIMER0;
+  REG_IF = 0xFFFF;
+
+  // reset timer and wait until it asserted an IRQ
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START | TIMER_IRQ;
+
+  while ((REG_IF & IRQ_TIMER0) == 0);
+
+  // reset timer again (avoid that overflow messes with the timing or anything)
+  // then enter HALT mode with the already-asserted IRQ
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  CpuSet(&tmp, (void*)&REG_POSTFLG, 1);
+
+  u16 timer = REG_TM0CNT_L;
+  expect("HALTCNT TIME ROM", 249, timer);
+}
+
 IWRAM_CODE int main(void) {
   consoleDemoInit();
 
@@ -77,6 +123,8 @@ IWRAM_CODE int main(void) {
 
   test_haltcnt_direct();
   test_haltcnt_cpuset();
+  test_haltcnt_timing_iwram();
+  test_haltcnt_timing_rom();
   print_metrics();
 
   while (1) {
