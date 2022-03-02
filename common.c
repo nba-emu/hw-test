@@ -31,6 +31,23 @@ IWRAM_CODE void expect(
   expect_range(name, expected, expected, actual);
 }
 
+IWRAM_CODE void expect_hex(
+  const char* name,
+  u32 expected,
+  u32 actual
+) {
+  printf("%s: ", name);
+
+  if (expected == actual) {
+    printf("PASS 0x%lx\n", actual);
+    test_pass_count++;
+  } else {
+    printf("FAIL 0x%lx\n  expected: 0x%lx\n", actual, expected);
+  }
+
+  test_count++;
+}
+
 IWRAM_CODE void print_metrics() {
   if (test_pass_count == test_count) {
     puts("\ncongratulations!");
