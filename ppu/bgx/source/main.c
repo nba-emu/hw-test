@@ -24,6 +24,7 @@ IWRAM_CODE int main(void) {
 
   u16 src_buffer[240];
 
+  // initialize the DMA source buffer with increasing BG2X values
   for (int i = 0; i < 240; i++) {
     src_buffer[i] = i << 8;
   }
@@ -33,6 +34,7 @@ IWRAM_CODE int main(void) {
     while (REG_VCOUNT == vcount_old);
     vcount_old = REG_VCOUNT;
 
+    // at HBLANK: DMA the source buffer to BG2X at two cycles per entry
     REG_DMA0SAD = (u32)src_buffer;
     REG_DMA0DAD = (u32)&REG_BG2X;
     REG_DMA0CNT = DMA_ENABLE | DMA_DST_FIXED | DMA_SRC_INC | DMA16 | DMA_HBLANK | 240;
