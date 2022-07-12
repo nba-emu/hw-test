@@ -4,10 +4,10 @@
 #include <gba_timers.h>
 #include <stdio.h>
 
-int IWRAM_CODE main(void) {
-	u16 result = 0;
+#include "../../../common.c"
 
-	consoleDemoInit();
+int IWRAM_CODE test_immediate() {
+	u16 result = 0;
 
 	REG_TM0CNT_H = 0;
 	REG_TM0CNT_L = 0;
@@ -18,7 +18,14 @@ int IWRAM_CODE main(void) {
 	REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_IMMEDIATE | 1;
 	while (REG_DMA0CNT & DMA_ENABLE);
 
-	printf("TM0CNT_L: %d\n", result);
+	expect("IMM", 20, result);
+}
+
+int IWRAM_CODE main(void) {
+	consoleDemoInit();
+
+	test_immediate();
+	print_metrics();
 
 	while (1) {
 	}
