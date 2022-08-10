@@ -53,8 +53,8 @@ IWRAM_CODE __attribute__((noinline)) void test_cancel_ie() {
     false,
     false,
     false,
-    true,
     false,
+    true,
     true,
     true,
     true
