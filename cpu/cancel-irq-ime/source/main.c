@@ -11,20 +11,21 @@ IWRAM_CODE void irq_handler() {
   irq_handled = true;
 }
 
-IWRAM_CODE __attribute__((noinline)) void __test_cancel_ie(int nops) {
+IWRAM_CODE __attribute__((noinline)) void __test_cancel_ime(int nops) {
   asm(
+    "push {r4}\n"
+
     // convert number of nops to run to number of nops to skip
     "rsb r0, r0, #8\n"
 
-    // r1 = 0x04000100 (IO base + 0x100)
-    "ldr r1, =#0x04000100\n"
-
-    // prepare for clearing IE
+    // prepare for clearing IME
     "mov r3, #0\n"
+    "ldr r4, =#0x04000208\n"
 
     // start TM0 with IRQ enabled
+    "ldr r1, =#0x04000102\n"
     "mov r2, #0xC0\n"
-    "strh r2, [r1, #0x2]\n"
+    "strh r2, [r1]\n"
 
     // jump into the NOP sled
     "add pc, r0, lsl #2\n"
@@ -41,20 +42,22 @@ IWRAM_CODE __attribute__((noinline)) void __test_cancel_ie(int nops) {
     "nop\n"
     "nop\n"
 
-    // clear IE
-    "str r3, [r1, #0x100]\n"
+    // clear IME
+    "strh r3, [r4]\n"
 
+    "pop {r4}\n"
     "bx lr\n"
+    ".pool"
   );
 }
 
-IWRAM_CODE __attribute__((noinline)) void test_cancel_ie() {
+IWRAM_CODE __attribute__((noinline)) void test_cancel_ime() {
   static const bool TEST_RESULTS[8] = {
     false,
     false,
     false,
     true,
-    false,
+    true,
     true,
     true,
     true
@@ -72,7 +75,7 @@ IWRAM_CODE __attribute__((noinline)) void test_cancel_ie() {
     // reset IRQ handled flag
     irq_handled = false;
 
-    __test_cancel_ie(i);
+    __test_cancel_ime(i);
 
     // wait for the IRQ with a timeout
     for (int j = 0; j < 1024; j++) {
@@ -94,9 +97,9 @@ IWRAM_CODE int main(void) {
   REG_IE = 0;
   REG_IF = 0xFFFF;
 
-  test_cancel_ie();
+  test_cancel_ime();
 
-  puts("\nIE");
+  puts("\nIME");
 
   while (1) {
   }
