@@ -38,14 +38,21 @@ int ui_show_menu(UIMenuOption const* options, size_t length, bool may_return) {
 
     u16 keys_up = keysUp();
 
-    if ((keys_up & KEY_UP) && option > 0) {
+    if (keys_up & KEY_UP) {
       should_redraw = true;
-      option--;
+      if (option == 0) {
+        option = length - 1;
+      } else {
+        option--;
+      }
     }
 
-    if ((keys_up & KEY_DOWN) && option < (length - 1)) {
+    if (keys_up & KEY_DOWN) {
       should_redraw = true;
       option++;
+      if (option == length) {
+        option = 0;
+      }
     }
 
     if (keys_up & KEY_A) {

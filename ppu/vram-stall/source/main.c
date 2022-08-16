@@ -180,7 +180,9 @@ static void test_pram_accesses() {
     /*5*/ { "(ALPHA BG0 BD )", NULL },             // 1000 (1st==transparent) OR 1010 (1st==opaque) 
     /*6*/ { "(ALPHA BG0 BG1) BG0=1 BG1=0", NULL }, // 1000
     /*7*/ { "(ALPHA BG0 BG1) BG0=1 BG1=1", NULL }, // 1000 (1st==transparent || 2nd==transparent) OR 1010 (1st==opaque && 2nd==opaque)
-    /*8*/ { "(ALPHA BG0 BG1) BG0=0 BG1=1", NULL }  // 1000
+    /*8*/ { "(ALPHA BG0 BG1) BG0=0 BG1=1", NULL }, // 1000
+    /*9*/ { "Mode 3", NULL },                      // 0000
+   /*10*/ { "Mode 3 + BD blend", NULL }            // 0010
   };
 
   int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
@@ -230,6 +232,16 @@ static void test_pram_accesses() {
         REG_DISPCNT &= ~BG0_ENABLE;
         REG_DISPCNT |=  BG1_ENABLE;
         REG_BLDCNT = (1 << 6) | 1 | (1 << 9);
+        break;
+      }
+      case 9: {
+        REG_DISPCNT = MODE_3 | BG2_ENABLE;
+        REG_BLDCNT = 0;
+        break;
+      }
+      case 10: {
+        REG_DISPCNT = MODE_3 | BG2_ENABLE;
+        REG_BLDCNT = (1 << 6) | 4 | (1 << 13); // SFX=alpha, 1st=BG2, 2nd=backdrop
         break;
       }
     }
