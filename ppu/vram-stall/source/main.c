@@ -35,7 +35,7 @@ static void sync(int line) {
   while (REG_VCOUNT != vcount_b);
 }
 
-static void __test_bg_vram_accesses(int line) {
+static void __test_accesses(int line, u32 address) {
   u16 results[1232];
 
   emit_fn wait = emit_get_wait();
@@ -47,7 +47,7 @@ static void __test_bg_vram_accesses(int line) {
     REG_DISPSTAT &= ~LCDC_HBL;
 
     // Register a H-blank IRQ handler with a delay of 'cycle' cycles.
-    irqSet(IRQ_HBLANK, emit_get_test(cycle));
+    irqSet(IRQ_HBLANK, emit_get_test(cycle, address));
 
     // Reset timer TM0
     REG_TM0CNT = 0;
@@ -130,7 +130,7 @@ static void test_mode0_accesses() {
     REG_BG2CNT = test->bgcnt;
     REG_BG3CNT = test->bgcnt;
 
-    __test_bg_vram_accesses(1);
+    __test_accesses(1, 0x06000000);
   }
 }
 
@@ -151,23 +151,93 @@ static void test_mode2_accesses() {
 
   if (option != -1) {
     REG_DISPCNT = dispcnt[option];
-    __test_bg_vram_accesses(1);
+    __test_accesses(1, 0x06000000);
   }
 }
 
 static void test_mode3_accesses() {
   REG_DISPCNT = MODE_3 | BG2_ENABLE;
-  __test_bg_vram_accesses(1);
+  __test_accesses(1, 0x06000000);
 }
 
 static void test_mode4_accesses() {
   REG_DISPCNT = MODE_4 | BG2_ENABLE;
-  __test_bg_vram_accesses(1);
+  __test_accesses(1, 0x06000000);
 }
 
 static void test_mode5_accesses() {
   REG_DISPCNT = MODE_5 | BG2_ENABLE;
-  __test_bg_vram_accesses(1);
+  __test_accesses(1, 0x06000000);
+}
+
+static void test_pram_accesses() {
+  UIMenuOption options[] = {
+    /*0*/ { "(OFF)", NULL},                        // 1000
+    /*1*/ { "(INC   0   0  )", NULL },             // 1000
+    /*2*/ { "(INC   BG0 0  )", NULL },             // 1000
+    /*3*/ { "(ALPHA 0   0  )", NULL },             // 1000
+    /*4*/ { "(ALPHA BG0 0  )", NULL },             // 1000
+    /*5*/ { "(ALPHA BG0 BD )", NULL },             // 1000 (1st==transparent) OR 1010 (1st==opaque) 
+    /*6*/ { "(ALPHA BG0 BG1) BG0=1 BG1=0", NULL }, // 1000
+    /*7*/ { "(ALPHA BG0 BG1) BG0=1 BG1=1", NULL }, // 1000 (1st==transparent || 2nd==transparent) OR 1010 (1st==opaque && 2nd==opaque)
+    /*8*/ { "(ALPHA BG0 BG1) BG0=0 BG1=1", NULL }  // 1000
+  };
+
+  int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
+
+  if (option != -1) {
+    REG_BG1CNT = REG_BG0CNT;
+    REG_DISPCNT = MODE_0 | BG0_ENABLE;
+
+    REG_BLDALPHA = (8 << 8) | 8; // EVA=8, EVB=8
+    REG_BLDY = 8;
+
+    switch (option) {
+      case 0: {
+        REG_BLDCNT = 0;
+        break;
+      }
+      case 1: {
+        REG_BLDCNT = (2 << 6); // SFX=inc, 1st=0, 2nd=0
+        break;
+      }
+      case 2: {
+        REG_BLDCNT = (2 << 6) | 1; // SFX=inc, 1st=BG0, 2nd=0
+        break;
+      }
+      case 3: {
+        REG_BLDCNT = (1 << 6); // SFX=alpha, 1st=0, 2nd=0
+        break;
+      }
+      case 4: {
+        REG_BLDCNT = (1 << 6) | 1; // SFX=alpha, 1st=BG0, 2nd=0
+        break;
+      }
+      case 5: {
+        REG_BLDCNT = (1 << 6) | 1 | (1 << 13); // SFX=alpha, 1st=BG0, 2nd=backdrop
+        break;
+      }
+      case 6: {
+        REG_BLDCNT = (1 << 6) | 1 | (1 << 9);
+        break;
+      }
+      case 7: {
+        REG_DISPCNT |= BG1_ENABLE;
+        REG_BLDCNT = (1 << 6) | 1 | (1 << 9);
+        break;
+      }
+      case 8: {
+        REG_DISPCNT &= ~BG0_ENABLE;
+        REG_DISPCNT |=  BG1_ENABLE;
+        REG_BLDCNT = (1 << 6) | 1 | (1 << 9);
+        break;
+      }
+    }
+
+    __test_accesses(1, 0x05000000);
+
+    REG_BLDCNT = 0;
+  }
 }
 
 int main(void) {
@@ -182,7 +252,8 @@ int main(void) {
       { "Mode 2", &test_mode2_accesses },
       { "Mode 3", &test_mode3_accesses },
       { "Mode 4", &test_mode4_accesses },
-      { "Mode 5", &test_mode5_accesses }
+      { "Mode 5", &test_mode5_accesses },
+      { "PRAM", &test_pram_accesses }
     };
 
     ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), false);

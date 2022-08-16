@@ -22,7 +22,7 @@ void emit_init() {
   emit_wait();
 }
 
-emit_fn emit_get_test(int delay) {
+emit_fn emit_get_test(int delay, u32 address) {
   u32* code = &code_test[0];
 
   // start TM0 timer:
@@ -36,9 +36,11 @@ emit_fn emit_get_test(int delay) {
     *code++ = 0xE320F000; // NOP
   }
 
-  // write to background VRAM:
-  *code++ = 0xE3A02406; // MOV R2, #0x06000000
-  *code++ = 0xE1C220B0; // STRH R2, [R2]
+  // read from VRAM/PRAM/OAM:
+  //*code++ = 0xE3A02406; // MOV R2, #0x06000000
+  //*code++ = 0xE1C220B0; // STRH R2, [R2]
+  *code++ = 0xE59F2014; // LDR R2, [PC, #20] (= address)
+  *code++ = 0xE1D220B0; // LDRH R2, [R2]
 
   // stop TM0 timer:
   *code++ = 0xE3A01000; // MOV R1, #0
@@ -49,6 +51,8 @@ emit_fn emit_get_test(int delay) {
   *code++ = 0xE5801000; // STR R1, [R0]
 
   *code++ = 0xE12FFF1E; // BX LR
+
+  *code++ = address;
 
   return (emit_fn)&code_test[0];
 }
