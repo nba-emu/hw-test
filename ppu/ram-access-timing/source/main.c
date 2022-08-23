@@ -95,6 +95,7 @@ static void test_mode0_accesses() {
   struct TestData {
     u16 dispcnt;
     u16 bgcnt;
+    u16 bghofs;
   };
 
   const UIMenuOption options[] = {
@@ -106,17 +107,23 @@ static void test_mode0_accesses() {
     { "BG1 (8bpp)", NULL },
     { "BG2 (8bpp)", NULL },
     { "BG3 (8bpp)", NULL },
+    { "BG0 (4bpp) (BGHOFS=1)", NULL },
+    { "BG0 (4bpp) (BGHOFS=2)", NULL },
+    { "BG0 (4bpp) (BGHOFS=8)", NULL }
   };
 
   const struct TestData tests[] = {
-    { MODE_0 | BG0_ENABLE, BG_16_COLOR },
-    { MODE_0 | BG1_ENABLE, BG_16_COLOR },
-    { MODE_0 | BG2_ENABLE, BG_16_COLOR },
-    { MODE_0 | BG3_ENABLE, BG_16_COLOR },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR },
-    { MODE_0 | BG1_ENABLE, BG_256_COLOR },
-    { MODE_0 | BG2_ENABLE, BG_256_COLOR },
-    { MODE_0 | BG3_ENABLE, BG_256_COLOR },
+    { MODE_0 | BG0_ENABLE, BG_16_COLOR, 0 },
+    { MODE_0 | BG1_ENABLE, BG_16_COLOR, 0 },
+    { MODE_0 | BG2_ENABLE, BG_16_COLOR, 0 },
+    { MODE_0 | BG3_ENABLE, BG_16_COLOR, 0 },
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 0 },
+    { MODE_0 | BG1_ENABLE, BG_256_COLOR, 0 },
+    { MODE_0 | BG2_ENABLE, BG_256_COLOR, 0 },
+    { MODE_0 | BG3_ENABLE, BG_256_COLOR, 0 },
+    { MODE_0 | BG0_ENABLE, BG_16_COLOR, 1 },
+    { MODE_0 | BG0_ENABLE, BG_16_COLOR, 2 },
+    { MODE_0 | BG0_ENABLE, BG_16_COLOR, 8 }
   };
 
   int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
@@ -130,7 +137,10 @@ static void test_mode0_accesses() {
     REG_BG2CNT = test->bgcnt;
     REG_BG3CNT = test->bgcnt;
 
+    REG_BG0HOFS = test->bghofs;
+
     __test_accesses(1, 0x06000000);
+    REG_BG0HOFS = 0; // TODO: fix this properly
   }
 }
 
