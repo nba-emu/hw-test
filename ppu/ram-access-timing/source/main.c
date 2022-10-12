@@ -4,6 +4,7 @@
 #include <gba_interrupt.h>
 #include <gba_timers.h>
 #include <gba_video.h>
+#include <gba_sprites.h>
 #include <stdio.h>
 
 #include "emit.h"
@@ -262,6 +263,89 @@ static void test_pram_accesses() {
   }
 }
 
+void test_sprite_accesses() {
+  UIMenuOption options[] = {
+    {"3x 4bpp -- 16px (OAM)", NULL},
+    {"3x 4bpp -- 16px (VRAM)", NULL},
+    {"3x 8bpp -- 16px (OAM)", NULL},
+    {"3x 8bpp -- 16px (VRAM)", NULL},
+    {"3x 4bpp RS 16px (OAM)", NULL},
+    {"3x 4bpp RS 16px (VRAM)", NULL},
+  };
+
+  int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
+
+  if (option != -1) {
+    REG_DISPCNT = MODE_0 | OBJ_ENABLE;
+
+    // initialize OAM with all disabled sprites
+    for (int i = 0; i < 128; i++) {
+      OAM[i].attr0 = OBJ_DISABLE;
+      OAM[i].attr1 = 0;
+      OAM[i].attr2 = 0;
+    }
+
+    switch (option) {
+      case 0: {
+        // 3x 4bpp -- 16px (OAM)
+        for (int i = 0; i < 3; i++) {
+          OAM[i].attr0 = 0; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x07000000);
+        break;
+      }
+      case 1: {
+        // 3x 4bpp -- 16px (VRAM)
+        for (int i = 0; i < 3; i++) {
+          OAM[i].attr0 = 0; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x06010000);
+        break;
+      }
+
+      case 2: {
+        // 3x 4bpp -- 16px (OAM)
+        for (int i = 0; i < 3; i++) {
+          OAM[i].attr0 = OBJ_256_COLOR; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x07000000);
+        break;
+      }
+      case 3: {
+        // 3x 4bpp -- 16px (VRAM)
+        for (int i = 0; i < 3; i++) {
+          OAM[i].attr0 = OBJ_256_COLOR; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x06010000);
+        break;
+      }
+
+      case 4: {
+        // 3x 4bpp RS 16px (OAM)
+        for (int i = 0; i < 3; i++) {
+          OAM[i].attr0 = OBJ_ROT_SCALE_ON; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x07000000);
+        break;
+      }
+      case 5: {
+        // 3x 4bpp RS 16px (VRAM)
+        for (int i = 0; i < 3; i++) {
+          OAM[i].attr0 = OBJ_ROT_SCALE_ON; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x06010000);
+        break;
+      }
+    }
+  }
+}
+
 int main(void) {
   irqInit();
 
@@ -275,7 +359,8 @@ int main(void) {
       { "Mode 3", &test_mode3_accesses },
       { "Mode 4", &test_mode4_accesses },
       { "Mode 5", &test_mode5_accesses },
-      { "PRAM", &test_pram_accesses }
+      { "PRAM", &test_pram_accesses },
+      { "Sprite", &test_sprite_accesses }
     };
 
     ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), false);
