@@ -265,12 +265,14 @@ static void test_pram_accesses() {
 
 void test_sprite_accesses() {
   UIMenuOption options[] = {
-    {"3x 4bpp -- 16px (OAM)", NULL},
-    {"3x 4bpp -- 16px (VRAM)", NULL},
-    {"3x 8bpp -- 16px (OAM)", NULL},
-    {"3x 8bpp -- 16px (VRAM)", NULL},
-    {"3x 4bpp RS 16px (OAM)", NULL},
-    {"3x 4bpp RS 16px (VRAM)", NULL},
+    {"3x 4bpp --- 16px (OAM)", NULL},
+    {"3x 4bpp --- 16px (VRAM)", NULL},
+    {"3x 8bpp --- 16px (OAM)", NULL},
+    {"3x 8bpp --- 16px (VRAM)", NULL},
+    {"3x 4bpp RS- 16px (OAM)", NULL},
+    {"3x 4bpp RS- 16px (VRAM)", NULL},
+    {"3x 4bpp RSD 16px (OAM)", NULL},
+    {"3x 4bpp RSD 16px (VRAM)", NULL},
   };
 
   int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
@@ -287,7 +289,7 @@ void test_sprite_accesses() {
 
     switch (option) {
       case 0: {
-        // 3x 4bpp -- 16px (OAM)
+        // 3x 4bpp --- 16px (OAM)
         for (int i = 0; i < 3; i++) {
           OAM[i].attr0 = 0; // enable
           OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
@@ -296,7 +298,7 @@ void test_sprite_accesses() {
         break;
       }
       case 1: {
-        // 3x 4bpp -- 16px (VRAM)
+        // 3x 4bpp --- 16px (VRAM)
         for (int i = 0; i < 3; i++) {
           OAM[i].attr0 = 0; // enable
           OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
@@ -306,7 +308,7 @@ void test_sprite_accesses() {
       }
 
       case 2: {
-        // 3x 4bpp -- 16px (OAM)
+        // 3x 4bpp --- 16px (OAM)
         for (int i = 0; i < 3; i++) {
           OAM[i].attr0 = OBJ_256_COLOR; // enable
           OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
@@ -315,7 +317,7 @@ void test_sprite_accesses() {
         break;
       }
       case 3: {
-        // 3x 4bpp -- 16px (VRAM)
+        // 3x 4bpp --- 16px (VRAM)
         for (int i = 0; i < 3; i++) {
           OAM[i].attr0 = OBJ_256_COLOR; // enable
           OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
@@ -325,7 +327,7 @@ void test_sprite_accesses() {
       }
 
       case 4: {
-        // 3x 4bpp RS 16px (OAM)
+        // 3x 4bpp RS- 16px (OAM)
         for (int i = 0; i < 3; i++) {
           OAM[i].attr0 = OBJ_ROT_SCALE_ON; // enable
           OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
@@ -334,9 +336,28 @@ void test_sprite_accesses() {
         break;
       }
       case 5: {
-        // 3x 4bpp RS 16px (VRAM)
+        // 3x 4bpp RS- 16px (VRAM)
         for (int i = 0; i < 3; i++) {
           OAM[i].attr0 = OBJ_ROT_SCALE_ON; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x06010000);
+        break;
+      }
+
+      case 6: {
+        // 3x 4bpp RSD 16px (OAM)
+        for (int i = 0; i < 3; i++) {
+          OAM[i].attr0 = OBJ_ROT_SCALE_ON | OBJ_DOUBLE;
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x07000000);
+        break;
+      }
+      case 7: {
+        // 3x 4bpp RSD 16px (VRAM)
+        for (int i = 0; i < 3; i++) {
+          OAM[i].attr0 = OBJ_ROT_SCALE_ON | OBJ_DOUBLE;
           OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
         }
         __test_accesses(1, 0x06010000);
