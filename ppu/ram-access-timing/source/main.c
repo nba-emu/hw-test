@@ -273,6 +273,8 @@ void test_sprite_accesses() {
     {"3x 4bpp RS- 16px (VRAM)", NULL},
     {"3x 4bpp RSD 16px (OAM)", NULL},
     {"3x 4bpp RSD 16px (VRAM)", NULL},
+    {"Unlocked H-blank", NULL},
+    {"Locked H-blank", NULL},
   };
 
   int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
@@ -361,6 +363,25 @@ void test_sprite_accesses() {
           OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
         }
         __test_accesses(1, 0x06010000);
+        break;
+      }
+      case 8: {
+        // Unlocked H-blank
+        REG_DISPCNT |= BIT(5); // enable fast OAM access during H-blank
+        for (int i = 0; i < 128; i++) {
+          OAM[i].attr0 = 0; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x07000000);
+        break;
+      }
+      case 9: {
+        // Locked H-blank
+        for (int i = 0; i < 128; i++) {
+          OAM[i].attr0 = 0; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x07000000);
         break;
       }
     }
