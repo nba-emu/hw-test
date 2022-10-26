@@ -36,42 +36,46 @@ static void sync(int line) {
   while (REG_VCOUNT != vcount_b);
 }
 
+static u16 __test_single_access(int line, u32 address, int cycle, emit_fn wait) {
+  // Make sure no IRQ is requested or handled,
+  // while we prepare for a H-blank IRQ.
+  REG_IME = 0;
+  REG_DISPSTAT &= ~LCDC_HBL;
+
+  // Register a H-blank IRQ handler with a delay of 'cycle' cycles.
+  irqSet(IRQ_HBLANK, emit_get_test(cycle, address));
+
+  // Reset timer TM0
+  REG_TM0CNT = 0;
+
+  // Sync to the start of the scanline, before the one we're targeting.
+  sync(line);
+
+  // Acknowledge all pending IRQs and allow the next H-blank IRQ to happen.
+  REG_IE = IRQ_HBLANK;
+  REG_IF = 0xFFFF;
+  REG_IME = 1;
+  REG_DISPSTAT |= LCDC_HBL;
+
+  /* Run a sequence of 1024 nops in IWRAM,
+   * this will allow the IRQ to be taken immediate,
+   * once the CPU registers it.
+   */
+  wait();
+
+  // Wait for the IRQ handler to complete execution.
+  while (REG_IE != 0) ;
+
+  return REG_TM0CNT_L;
+}
+
 static void __test_accesses(int line, u32 address) {
   u16 results[1232];
 
   emit_fn wait = emit_get_wait();
 
   for (int cycle = 0; cycle < 1232; cycle++) {
-    // Make sure no IRQ is requested or handled,
-    // while we prepare for a H-blank IRQ.
-    REG_IME = 0;
-    REG_DISPSTAT &= ~LCDC_HBL;
-
-    // Register a H-blank IRQ handler with a delay of 'cycle' cycles.
-    irqSet(IRQ_HBLANK, emit_get_test(cycle, address));
-
-    // Reset timer TM0
-    REG_TM0CNT = 0;
-
-    // Sync to the start of the scanline, before the one we're targeting.
-    sync(line);
-  
-    // Acknowledge all pending IRQs and allow the next H-blank IRQ to happen.
-    REG_IE = IRQ_HBLANK;
-    REG_IF = 0xFFFF;
-    REG_IME = 1;
-    REG_DISPSTAT |= LCDC_HBL;
-
-    /* Run a sequence of 1024 nops in IWRAM,
-     * this will allow the IRQ to be taken immediate,
-     * once the CPU registers it.
-     */
-    wait();
-
-    // Wait for the IRQ handler to complete execution.
-    while (REG_IE != 0) ;
-
-    results[cycle] = REG_TM0CNT_L;
+    results[cycle] = __test_single_access(line, address, cycle, wait);
   }
 
   // TODO: make it redundant to reinitialize the console.
@@ -80,6 +84,9 @@ static void __test_accesses(int line, u32 address) {
   u8* sram = (u8*)0x0E000000;
 
   int calibration = (int)results[0];
+
+  // @todo: this needs a proper solution
+  if (results[0] == results[1]) calibration--; // we had a stall on the first sample
 
   for (int cycle = 1; cycle < 1232; cycle++) {
     int stalls = results[cycle] - calibration - cycle;
@@ -273,8 +280,10 @@ void test_sprite_accesses() {
     {"3x 4bpp RS- 16px (VRAM)", NULL},
     {"3x 4bpp RSD 16px (OAM)", NULL},
     {"3x 4bpp RSD 16px (VRAM)", NULL},
-    {"Unlocked H-blank", NULL},
-    {"Locked H-blank", NULL},
+    {"Unlocked H-blank (OAM)", NULL},
+    {"Unlocked H-blank (VRAM)", NULL},
+    {"Locked H-blank (OAM)", NULL},
+    {"Locked H-blank (VRAM)", NULL}
   };
 
   int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
@@ -365,8 +374,9 @@ void test_sprite_accesses() {
         __test_accesses(1, 0x06010000);
         break;
       }
+
       case 8: {
-        // Unlocked H-blank
+        // Unlocked H-blank (OAM)
         REG_DISPCNT |= BIT(5); // enable fast OAM access during H-blank
         for (int i = 0; i < 128; i++) {
           OAM[i].attr0 = 0; // enable
@@ -376,12 +386,31 @@ void test_sprite_accesses() {
         break;
       }
       case 9: {
-        // Locked H-blank
+        // Unlocked H-blank (VRAM)
+        REG_DISPCNT |= BIT(5); // enable fast OAM access during H-blank
+        for (int i = 0; i < 128; i++) {
+          OAM[i].attr0 = 0; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x06010000);
+        break;
+      }
+      case 10: {
+        // Locked H-blank (OAM)
         for (int i = 0; i < 128; i++) {
           OAM[i].attr0 = 0; // enable
           OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
         }
         __test_accesses(1, 0x07000000);
+        break;
+      }
+      case 11: {
+        // Locked H-blank (VRAM)
+        for (int i = 0; i < 128; i++) {
+          OAM[i].attr0 = 0; // enable
+          OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
+        }
+        __test_accesses(1, 0x06010000);
         break;
       }
     }
