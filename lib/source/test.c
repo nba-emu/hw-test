@@ -1,4 +1,5 @@
 #include <gba_systemcalls.h>
+#include <stdio.h>
 
 #include "test.h"
 
