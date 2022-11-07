@@ -6,7 +6,7 @@
 #include <gba_video.h>
 #include <stdio.h> 
 
-#include "../../common.c"
+#include "test.h"
 
 #define REG_POSTFLG *((vu8*)0x04000300)
 #define REG_HALTCNT *((vu8*)0x04000301)
@@ -37,7 +37,7 @@ IWRAM_CODE void test_haltcnt_direct() {
 
   u16 result = REG_TM0CNT_L;
 
-  expect_range("HALTCNT DIRECT", 0, 16, result);
+  test_expect_range("HALTCNT DIRECT", 0, 16, result);
 }
 
 IWRAM_CODE void test_haltcnt_cpuset() {
@@ -60,10 +60,10 @@ IWRAM_CODE void test_haltcnt_cpuset() {
 
   u16 result = REG_TM0CNT_L;
 
-  expect_range("HALTCNT CPUSET", 900, 1100, result);
+  test_expect_range("HALTCNT CPUSET", 900, 1100, result);
 
   // make sure that the CpuSet doesn't unset POSTFLAG.
-  expect("POSTFLG", 1, REG_POSTFLG);
+  test_expect("POSTFLG", 1, REG_POSTFLG);
 }
 
 __attribute__((optimize("O0"))) IWRAM_CODE void test_haltcnt_timing_iwram() {
@@ -86,7 +86,7 @@ __attribute__((optimize("O0"))) IWRAM_CODE void test_haltcnt_timing_iwram() {
   IWRAM_CpuSet(&tmp, (void*)&REG_POSTFLG, 1);
   
   u16 timer = REG_TM0CNT_L;
-  expect("HALTCNT TIME IWRAM", 125, timer);
+  test_expect("HALTCNT TIME IWRAM", 125, timer);
 }
 
 __attribute__((optimize("O0"))) void test_haltcnt_timing_rom() {
@@ -109,7 +109,7 @@ __attribute__((optimize("O0"))) void test_haltcnt_timing_rom() {
   CpuSet(&tmp, (void*)&REG_POSTFLG, 1);
 
   u16 timer = REG_TM0CNT_L;
-  expect("HALTCNT TIME ROM", 249, timer);
+  test_expect("HALTCNT TIME ROM", 249, timer);
 }
 
 IWRAM_CODE int main(void) {
@@ -125,7 +125,7 @@ IWRAM_CODE int main(void) {
   test_haltcnt_cpuset();
   test_haltcnt_timing_iwram();
   test_haltcnt_timing_rom();
-  print_metrics();
+  test_print_metrics();
 
   while (1) {
   }

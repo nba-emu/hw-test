@@ -12,7 +12,7 @@
 
 static u16 samples[SAMPLE_COUNT * 2];
 
-#include "../../../common.c"
+#include "test.h"
 
 // Test when a H-blank DMA is started inside a scanline.
 IWRAM_CODE void test_hblank_dma_time() {
@@ -30,8 +30,8 @@ IWRAM_CODE void test_hblank_dma_time() {
   REG_DMA0CNT = DMA_DST_FIXED | DMA_SRC_FIXED | DMA_HBLANK | DMA16 | DMA_ENABLE | 1;
   while (REG_DMA0CNT & DMA_ENABLE) ;
 
-  // reads 990 on hardware
-  expect_range("HBL DMA", 982, 1002, cycle_count);
+  // reads 995 on hardware
+  test_expect_range("HBL DMA", 982, 1002, cycle_count);
 }
 
 // Test when the H-blank and V-count coincidence bits are set inside a scanline.
@@ -64,8 +64,8 @@ IWRAM_CODE void test_hblank_and_vcount_bit() {
       }
     }
 
-    expect_range("STAT HBL SET", 0, 0, set);
-    expect_range("STAT HBL UNSET", 111, 111, unset);
+    test_expect_range("STAT HBL SET", 0, 0, set);
+    test_expect_range("STAT HBL UNSET", 111, 111, unset);
   }
 
   // Check H-blank bit set and unset times
@@ -88,8 +88,8 @@ IWRAM_CODE void test_hblank_and_vcount_bit() {
       }
     }
 
-    expect_range("STAT VCNT SET", 111, 111, set);
-    expect_range("STAT VCNT UNSET", 727, 727, unset);
+    test_expect_range("STAT VCNT SET", 111, 111, set);
+    test_expect_range("STAT VCNT UNSET", 727, 727, unset);
   }
 }
 
@@ -118,8 +118,8 @@ IWRAM_CODE void test_hblank_irq() {
     }
   }
 
-  // reads 490 on hardware
-  expect_range("HBL IRQ", 485, 495, set);
+  // reads 488 on hardware
+  test_expect_range("HBL IRQ", 485, 495, set);
 }
 
 
@@ -129,7 +129,7 @@ IWRAM_CODE int main(void) {
   test_hblank_dma_time();
   test_hblank_and_vcount_bit();
   test_hblank_irq();
-  print_metrics();
+  test_print_metrics();
 
   while (1) {
   }

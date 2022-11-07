@@ -6,7 +6,7 @@
 #include <gba_interrupt.h>
 #include <stdio.h>  
 
-#include "../../../common.c"
+#include "test.h"
 
 IWRAM_CODE void test_video_transfer_dma_start() {
   u16 result;
@@ -24,7 +24,7 @@ IWRAM_CODE void test_video_transfer_dma_start() {
   REG_DMA3CNT = DMA_ENABLE | DMA_SRC_FIXED | DMA_DST_FIXED | DMA16 | DMA_SPECIAL | 1;
   while (REG_DMA3CNT & DMA_ENABLE);
 
-  expect_hex("DMA3 XFER", 0x52d3, result);
+  test_expect_hex("DMA3 XFER", 0x52d3, result);
 }
 
 IWRAM_CODE void test_hblank_flag_set_unset() {
@@ -67,9 +67,9 @@ IWRAM_CODE void test_hblank_flag_set_unset() {
     }
   }
 
-  expect("HBL SET", 500, hblank_set);
-  expect("HBL UNSET", 613, hblank_unset);
-  expect("VCNT FLAG SET", 613, vcount_flag_set);
+  test_expect("HBL SET", 500, hblank_set);
+  test_expect("HBL UNSET", 613, hblank_unset);
+  test_expect("VCNT FLAG SET", 613, vcount_flag_set);
 }
 
 IWRAM_CODE void test_vcount_change() {
@@ -94,7 +94,7 @@ IWRAM_CODE void test_vcount_change() {
     }
   }
 
-  expect("VCNT CHANGE", 613, vcount_change);
+  test_expect("VCNT CHANGE", 613, vcount_change);
 }
 
 IWRAM_CODE void test_hblank_dma() {
@@ -131,7 +131,7 @@ IWRAM_CODE void test_hblank_dma() {
     }
   }
 
-  expect("HBL DMA", 502, hblank_dma);
+  test_expect("HBL DMA", 502, hblank_dma);
 }
 
 IWRAM_CODE void test_hblank_irq() {
@@ -159,7 +159,7 @@ IWRAM_CODE void test_hblank_irq() {
     }
   }
 
-  expect("HBL IRQ", 501, irq_assert);
+  test_expect("HBL IRQ", 501, irq_assert);
 }
 
 IWRAM_CODE int main(void) {
@@ -171,7 +171,7 @@ IWRAM_CODE int main(void) {
   test_hblank_dma();
   test_hblank_irq();
 
-  print_metrics();
+  test_print_metrics();
 
   while (1) {
   }

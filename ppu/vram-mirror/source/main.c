@@ -7,7 +7,7 @@
 #include <gba_video.h>
 #include <stdio.h> 
 
-#include "../../../common.c"
+#include "test.h"
 
 IWRAM_CODE u32 crc32(vu8 const* data, int length) {
   u32 crc32 = 0xFFFFFFFF;
@@ -67,19 +67,19 @@ IWRAM_CODE int main(void) {
 
   consoleDemoInit();
 
-  expect_hex("M0 10000h", 0xABAD1DEA, m0_10000h);
-  expect_hex("M0 14000h", 0x12345678, m0_14000h);
-  expect_hex("M0 18000h", 0xABAD1DEA, m0_18000h);
-  expect_hex("M0 1C000h", 0x12345678, m0_1C000h);
-  expect_hex("M0 CRC32", 0xD2E083BA, m0_crc32);
+  test_expect_hex("M0 10000h", 0xABAD1DEA, m0_10000h);
+  test_expect_hex("M0 14000h", 0x12345678, m0_14000h);
+  test_expect_hex("M0 18000h", 0xABAD1DEA, m0_18000h);
+  test_expect_hex("M0 1C000h", 0x12345678, m0_1C000h);
+  test_expect_hex("M0 CRC32", 0xD2E083BA, m0_crc32);
 
-  expect_hex("M3 10000h", 0xABAD1DEA, m3_10000h);
-  expect_hex("M3 14000h", 0x87654321, m3_14000h);
-  expect_hex("M3 18000h", 0x00000000, m3_18000h);
-  expect_hex("M3 1C000h", 0x87654321, m3_1C000h);
-  expect_hex("M3 CRC32", 0x5B156CE9, m3_crc32);
+  test_expect_hex("M3 10000h", 0xABAD1DEA, m3_10000h);
+  test_expect_hex("M3 14000h", 0x87654321, m3_14000h);
+  test_expect_hex("M3 18000h", 0x00000000, m3_18000h);
+  test_expect_hex("M3 1C000h", 0x87654321, m3_1C000h);
+  test_expect_hex("M3 CRC32", 0x5B156CE9, m3_crc32);
 
-  print_metrics();
+  test_print_metrics();
 
   while (1) {
   }

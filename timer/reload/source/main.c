@@ -6,7 +6,7 @@
 #include <gba_video.h>
 #include <stdio.h> 
 
-#include "../../../common.c"
+#include "test.h"
 
 IWRAM_CODE __attribute__((naked)) u16 test_reload(u16 reload) {
   asm(
@@ -160,15 +160,15 @@ IWRAM_CODE __attribute__((naked)) u16 test_reload_overwrite_32_7(u16 reload) {
 IWRAM_CODE int main(void) {
   consoleDemoInit();
 
-  expect_hex("FFF8 -- -", 0xFFF9, test_reload(0xFFF8));
-  expect_hex("FFF8 16 0", 0xDEAE, test_reload_overwrite_16_0(0xFFF8));
-  expect_hex("FFF8 32 0", 0xDEAE, test_reload_overwrite_32_0(0xFFF8));
-  expect_hex("FFF8 32 6", 0xDEAE, test_reload_overwrite_32_6(0xFFF8));
-  expect_hex("FFF8 32 7", 0xFFF9, test_reload_overwrite_32_7(0xFFF8));
-  expect_hex("FFFF 16 0", 0xDEB4, test_reload_overwrite_16_0(0xFFFF));
-  expect_hex("FFFF 32 0", 0xDEB4, test_reload_overwrite_32_0(0xFFFF));
+  test_expect_hex("FFF8 -- -", 0xFFF9, test_reload(0xFFF8));
+  test_expect_hex("FFF8 16 0", 0xDEAE, test_reload_overwrite_16_0(0xFFF8));
+  test_expect_hex("FFF8 32 0", 0xDEAE, test_reload_overwrite_32_0(0xFFF8));
+  test_expect_hex("FFF8 32 6", 0xDEAE, test_reload_overwrite_32_6(0xFFF8));
+  test_expect_hex("FFF8 32 7", 0xFFF9, test_reload_overwrite_32_7(0xFFF8));
+  test_expect_hex("FFFF 16 0", 0xDEB4, test_reload_overwrite_16_0(0xFFFF));
+  test_expect_hex("FFFF 32 0", 0xDEB4, test_reload_overwrite_32_0(0xFFFF));
   
-  print_metrics();
+  test_print_metrics();
 
   while (1) {
   }

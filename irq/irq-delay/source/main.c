@@ -7,7 +7,7 @@
 #include <gba_video.h>
 #include <stdio.h>
 
-#include "../../../common.c"
+#include "test.h"
 
 static volatile bool irq_handled;
 static u16 timer0_value = 0;
@@ -58,7 +58,7 @@ static ALWAYS_INLINE void __test_irq_time(const char* test_name, u16 expected) {
   REG_IME = 1;
   while (!irq_handled) ;
 
-  expect(test_name, expected, timer0_value);
+  test_expect(test_name, expected, timer0_value);
 }
 
 static __attribute__((noinline)) IWRAM_CODE void test_irq_time_iwram() {
@@ -81,7 +81,7 @@ IWRAM_CODE int main(void) {
   test_irq_time_ewram();
   test_irq_time_rom();
   
-  print_metrics();
+  test_print_metrics();
 
   while (1) {
   }

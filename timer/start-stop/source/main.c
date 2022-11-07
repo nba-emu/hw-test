@@ -3,7 +3,7 @@
 #include <gba_timers.h>
 #include <stdio.h>
 
-#include "../../../common.c"
+#include "test.h"
 
 IWRAM_CODE void test_start_stop() {
   REG_TM0CNT = 0;
@@ -29,15 +29,15 @@ IWRAM_CODE void test_start_stop() {
 
   u16 sample2 = REG_TM0CNT_L;
 
-  expect("1ST", 3, sample1);
-  expect("2ND", 8, sample2);
+  test_expect("1ST", 3, sample1);
+  test_expect("2ND", 8, sample2);
 }
 
 IWRAM_CODE int main(void) {
   consoleDemoInit();
   
   test_start_stop();
-  print_metrics();
+  test_print_metrics();
 
   while (1) {
   }
