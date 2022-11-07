@@ -1,18 +1,25 @@
-
+#include <gba_console.h>
 #include <gba_input.h>
 #include <gba_video.h>
 #include <stdio.h>
 
 #include "ui.h"
 
-static void clear_screen() {
-  printf("\e[1;1H\e[2J");
-}
-
 static void set_palette(int row, int column, int palette) {
   u16* map_entry = (u16*)0x06002000 + row * 32 + column;
 
   *map_entry = (*map_entry & 0x0FFF) | (palette << 12);
+}
+
+void ui_init() {
+  consoleDemoInit();
+
+  //set black background color
+  BG_COLORS[0] = RGB8(0, 0, 0);
+}
+
+void ui_clear() {
+  printf("\e[1;1H\e[2J");
 }
 
 int ui_show_menu(UIMenuOption const* options, size_t length, bool may_return) {
@@ -21,7 +28,7 @@ int ui_show_menu(UIMenuOption const* options, size_t length, bool may_return) {
 
   while (true) {
     if (should_redraw) {
-      clear_screen();
+      ui_clear();
 
       for (size_t i = 0; i < length; i++) {
         if (i == option) {
@@ -100,7 +107,7 @@ void ui_view_bitmap_cmp(u8* bitmap_a, u8* bitmap_b, int length) {
         visible_rows = MAX_VISIBLE_ROWS;
       }
 
-      clear_screen();
+      ui_clear();
 
       for (int row = 0; row < visible_rows; row++) {
         printf("%04d: ", index);

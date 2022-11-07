@@ -10,13 +10,6 @@
 #include "emit.h"
 #include "ui.h"
 
-static void console_init() {
-  consoleDemoInit();
-
-  //set black background color
-  BG_COLORS[0] = RGB8(0, 0, 0);
-}
-
 static void sync(int line) {
   int vcount_a;
   int vcount_b;
@@ -79,7 +72,7 @@ static void __test_accesses(int line, u32 address) {
   }
 
   // TODO: make it redundant to reinitialize the console.
-  console_init();
+  ui_init();
 
   u8* sram = (u8*)0x0E000000;
 
@@ -421,7 +414,7 @@ int main(void) {
   irqInit();
 
   emit_init();
-  console_init();
+  ui_init();
 
   while (true) {
     UIMenuOption options[] = {

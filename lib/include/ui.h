@@ -9,6 +9,9 @@ typedef struct {
   void (*callback)();
 } UIMenuOption;
 
+void ui_init();
+void ui_clear();
+
 int ui_show_menu(UIMenuOption const* options, size_t length, bool may_return);
 
 void ui_view_bitmap(u8* bitmap, int length);
