@@ -2,7 +2,6 @@
 #include <gba_console.h>
 #include <gba_dma.h>
 #include <gba_timers.h>
-#include <gba_systemcalls.h>
 #include <stdio.h>
 
 #include "test.h"
@@ -43,7 +42,6 @@ int IWRAM_CODE main(void) {
   test_print_metrics();
 
   while (1) {
-    VBlankIntrWait();
   }
 }
 
