@@ -45,6 +45,12 @@ IWRAM_CODE __attribute__((noinline)) void __test_cancel_if(int nops) {
     // clear IF
     "strh r3, [r4]\n"
 
+    // make sure the IRQ is taken as soon as possible
+    "nop\n"
+    "nop\n"
+    "nop\n"
+    "nop\n"
+
     "pop {r4}\n"
     "bx lr\n"
     ".pool"

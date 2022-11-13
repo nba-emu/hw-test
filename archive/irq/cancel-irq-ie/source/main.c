@@ -44,6 +44,12 @@ IWRAM_CODE __attribute__((noinline)) void __test_cancel_ie(int nops) {
     // clear IE
     "str r3, [r1, #0x100]\n"
 
+    // make sure the IRQ is taken as soon as possible
+    "nop\n"
+    "nop\n"
+    "nop\n"
+    "nop\n"
+
     "bx lr\n"
   );
 }
@@ -53,8 +59,8 @@ IWRAM_CODE __attribute__((noinline)) void test_cancel_ie() {
     false,
     false,
     false,
-    false,
     true,
+    false,
     true,
     true,
     true

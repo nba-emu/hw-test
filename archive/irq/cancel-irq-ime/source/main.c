@@ -45,6 +45,12 @@ IWRAM_CODE __attribute__((noinline)) void __test_cancel_ime(int nops) {
     // clear IME
     "strh r3, [r4]\n"
 
+    // make sure the IRQ is taken as soon as possible
+    "nop\n"
+    "nop\n"
+    "nop\n"
+    "nop\n"
+
     "pop {r4}\n"
     "bx lr\n"
     ".pool"
@@ -54,8 +60,9 @@ IWRAM_CODE __attribute__((noinline)) void __test_cancel_ime(int nops) {
 IWRAM_CODE __attribute__((noinline)) void test_cancel_ime() {
   static const bool TEST_RESULTS[8] = {
     false,
-    false,
-    false,
+    true,
+    true,
+    true,
     true,
     true,
     true,
