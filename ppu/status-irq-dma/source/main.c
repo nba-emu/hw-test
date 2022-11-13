@@ -289,8 +289,6 @@ int main(void) {
   ui_init();
   emit_init();
 
-  // TODO: test DMA!
-
   while (true) {
     UIMenuOption options[] = {
       { "DISPSTAT", &test_dispstat },
