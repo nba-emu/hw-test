@@ -276,7 +276,9 @@ void test_sprite_accesses() {
     {"Unlocked H-blank (OAM)", NULL},
     {"Unlocked H-blank (VRAM)", NULL},
     {"Locked H-blank (OAM)", NULL},
-    {"Locked H-blank (VRAM)", NULL}
+    {"Locked H-blank (VRAM)", NULL},
+    {"Horizontal clipping (OAM)", NULL},
+    {"Horizontal clipping (VRAM)", NULL}
   };
 
   int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
@@ -403,6 +405,43 @@ void test_sprite_accesses() {
           OAM[i].attr0 = 0; // enable
           OAM[i].attr1 = OBJ_SIZE(1); // 16x16 size
         }
+        __test_accesses(1, 0x06010000);
+        break;
+      }
+
+      case 12: {
+        // Horizontal clipping (OAM)
+
+        // Partially offscreen on the left screen border
+        OAM[0].attr0 = 0; // enable
+        OAM[0].attr1 = OBJ_SIZE(1) | OBJ_X(-7); // 16x16 size, X=-7
+
+        // Fully offscreen
+        OAM[1].attr0 = 0; // enable
+        OAM[1].attr1 = OBJ_SIZE(1) | OBJ_X(-20); // 16x16 size, X=-20
+
+        // Partially offscreen on the right screen border
+        OAM[2].attr0 = 0; // enable
+        OAM[2].attr1 = OBJ_SIZE(1) | OBJ_X(232); // 16x16 size, X=232
+
+        __test_accesses(1, 0x07000000);
+        break;
+      }
+      case 13: {
+        // Horizontal clipping (VRAM)
+
+        // Partially offscreen on the left screen border
+        OAM[0].attr0 = 0; // enable
+        OAM[0].attr1 = OBJ_SIZE(1) | OBJ_X(-7); // 16x16 size, X=-7
+
+        // Fully offscreen
+        OAM[1].attr0 = 0; // enable
+        OAM[1].attr1 = OBJ_SIZE(1) | OBJ_X(-20); // 16x16 size, X=-20
+
+        // Partially offscreen on the right screen border
+        OAM[2].attr0 = 0; // enable
+        OAM[2].attr1 = OBJ_SIZE(1) | OBJ_X(232); // 16x16 size, X=232
+
         __test_accesses(1, 0x06010000);
         break;
       }
