@@ -2,6 +2,7 @@
 #include <gba_console.h>
 #include <gba_dma.h>
 #include <gba_interrupt.h>
+#include <gba_input.h>
 #include <gba_timers.h>
 #include <gba_video.h>
 #include <gba_sprites.h>
@@ -449,6 +450,253 @@ void test_sprite_accesses() {
   }
 }
 
+void IWRAM_CODE test_dispcnt_latch_bg_vram_fetch() {
+  /**
+   * BG VRAM fetch happens only if both the latched and current BG enable bit are set.
+   *
+   * @todo: test the effect of BGHOFS[0:2] on the timing.
+   */
+  u16 results[4];
+
+  u16 saved_dispcnt = REG_DISPCNT;
+
+  REG_DISPCNT &= ~BG_ALL_ON;
+
+  REG_DMA0SAD = 0x06000000;
+  REG_DMA0DAD = 0x06000000;
+
+  while(REG_VCOUNT == 2) ;
+  while(REG_VCOUNT != 2) ;
+  REG_DISPCNT |= BG_ALL_ON;
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE );
+  results[0] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 3) ; // hopefully we're still @ line 2
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[1] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 4) ; // hopefully we're still @ line 3
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[2] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 5) ; // hopefully we're still @ line 4
+  REG_DISPCNT &= ~BG_ALL_ON;
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[3] = REG_TM0CNT_L;
+
+  REG_TM0CNT_H = 0;
+  REG_DISPCNT = saved_dispcnt;
+
+  ui_clear();
+  printf("%d %d %d %d\n", results[0], results[1], results[2], results[3]);
+
+  while(true) {
+    scanKeys();
+    if(keysUp() & KEY_B) break;
+  }
+}
+
+void IWRAM_CODE test_dispcnt_latch_bg_vram_fetch_forced_blank() {
+  /**
+   * BG VRAM fetch happens only if both the latched and current 'forced blank' bits are cleared.
+   *
+   * @todo: test the effect of BGHOFS[0:2] on the timing.
+   */
+  u16 results[4];
+
+  u16 saved_dispcnt = REG_DISPCNT;
+
+  REG_DISPCNT |= LCDC_OFF | BG_ALL_ON;
+
+  REG_DMA0SAD = 0x06000000;
+  REG_DMA0DAD = 0x06000000;
+
+  while(REG_VCOUNT == 2) ;
+  while(REG_VCOUNT != 2) ;
+  REG_DISPCNT &= ~LCDC_OFF;
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE );
+  results[0] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 3) ; // hopefully we're still @ line 2
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[1] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 4) ; // hopefully we're still @ line 3
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[2] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 5) ; // hopefully we're still @ line 4
+  REG_DISPCNT |= LCDC_OFF;
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[3] = REG_TM0CNT_L;
+
+  REG_TM0CNT_H = 0;
+  REG_DISPCNT = saved_dispcnt;
+
+  ui_clear();
+  printf("%d %d %d %d\n", results[0], results[1], results[2], results[3]);
+
+  while(true) {
+    scanKeys();
+    if(keysUp() & KEY_B) break;
+  }
+}
+
+void IWRAM_CODE test_dispcnt_latch_obj_vram_fetch() {
+  // OBJ VRAM fetch happens only if the current OBJ enable bit is set (the latched one is disregarded).
+
+  u16 results[4];
+
+  u16 saved_dispcnt = REG_DISPCNT;
+
+  REG_DISPCNT &= ~OBJ_ENABLE;
+
+  for (int i = 0; i < 128; i++) {
+    OAM[i].attr0 = 0; // enable
+    OAM[i].attr1 = OBJ_SIZE(3); // 64x64 size
+  }
+
+  REG_DMA0SAD = 0x06010000;
+  REG_DMA0DAD = 0x06010000;
+
+  while(REG_VCOUNT == 2) ;
+  while(REG_VCOUNT != 2) ;
+  REG_DISPCNT |= OBJ_ENABLE;
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE );
+  results[0] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 3) ; // hopefully we're still @ line 2
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[1] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 4) ; // hopefully we're still @ line 3
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[2] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 5) ; // hopefully we're still @ line 4
+  REG_DISPCNT &= ~OBJ_ENABLE;
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[3] = REG_TM0CNT_L;
+
+  REG_TM0CNT_H = 0;
+  REG_DISPCNT = saved_dispcnt;
+
+  ui_clear();
+  printf("%d %d %d %d\n", results[0], results[1], results[2], results[3]);
+
+  while(true) {
+    scanKeys();
+    if(keysUp() & KEY_B) break;
+  }
+}
+
+void IWRAM_CODE test_dispcnt_latch_obj_vram_fetch_forced_blank() {
+  // OBJ VRAM fetch does not seem to be affected by 'forced blank' at all???
+
+  u16 results[4];
+
+  u16 saved_dispcnt = REG_DISPCNT;
+
+  REG_DISPCNT |= LCDC_OFF | OBJ_ENABLE;
+
+  for (int i = 0; i < 128; i++) {
+    OAM[i].attr0 = 0; // enable
+    OAM[i].attr1 = OBJ_SIZE(3); // 64x64 size
+  }
+
+  REG_DMA0SAD = 0x06010000;
+  REG_DMA0DAD = 0x06010000;
+
+  while(REG_VCOUNT == 2) ;
+  while(REG_VCOUNT != 2) ;
+  REG_DISPCNT &= ~LCDC_OFF;
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE );
+  results[0] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 3) ; // hopefully we're still @ line 2
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[1] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 4) ; // hopefully we're still @ line 3
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[2] = REG_TM0CNT_L;
+
+  while(REG_VCOUNT != 5) ; // hopefully we're still @ line 4
+  REG_DISPCNT |= LCDC_OFF;
+  REG_TM0CNT = 0;
+  REG_TM0CNT_H = TIMER_START;
+  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_SRC_FIXED | DMA_DST_FIXED | 128;
+  while(REG_DMA0CNT & DMA_ENABLE);
+  results[3] = REG_TM0CNT_L;
+
+  REG_TM0CNT_H = 0;
+  REG_DISPCNT = saved_dispcnt;
+
+  ui_clear();
+  printf("%d %d %d %d\n", results[0], results[1], results[2], results[3]);
+
+  while(true) {
+    scanKeys();
+    if(keysUp() & KEY_B) break;
+  }
+}
+
+void test_dispcnt_latch() {
+  UIMenuOption options[] = {
+    { "BG VRAM fetch", &test_dispcnt_latch_bg_vram_fetch },
+    { "BG VRAM fetch (LCDC off)", &test_dispcnt_latch_bg_vram_fetch_forced_blank },
+    { "OBJ VRAM fetch", &test_dispcnt_latch_obj_vram_fetch },
+    { "OBJ VRAM fetch (LCDC off)", &test_dispcnt_latch_obj_vram_fetch_forced_blank }
+  };
+
+  ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
+}
+
 int main(void) {
   irqInit();
 
@@ -463,7 +711,8 @@ int main(void) {
       { "Mode 4", &test_mode4_accesses },
       { "Mode 5", &test_mode5_accesses },
       { "PRAM", &test_pram_accesses },
-      { "Sprite", &test_sprite_accesses }
+      { "Sprite", &test_sprite_accesses },
+      { "DISPCNT latch", &test_dispcnt_latch}
     };
 
     ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), false);
