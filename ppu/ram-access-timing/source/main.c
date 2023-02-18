@@ -97,7 +97,6 @@ static void test_mode0_accesses() {
   struct TestData {
     u16 dispcnt;
     u16 bgcnt;
-    u16 bghofs;
   };
 
   const UIMenuOption options[] = {
@@ -108,51 +107,69 @@ static void test_mode0_accesses() {
     { "BG0 (8bpp)", NULL },
     { "BG1 (8bpp)", NULL },
     { "BG2 (8bpp)", NULL },
-    { "BG3 (8bpp)", NULL },
-    { "BG0 (8bpp) (BGHOFS=1)", NULL },
-    { "BG0 (8bpp) (BGHOFS=2)", NULL },
-    { "BG0 (8bpp) (BGHOFS=3)", NULL },
-    { "BG0 (8bpp) (BGHOFS=4)", NULL },
-    { "BG0 (8bpp) (BGHOFS=5)", NULL },
-    { "BG0 (8bpp) (BGHOFS=6)", NULL },
-    { "BG0 (8bpp) (BGHOFS=7)", NULL },
-    { "BG0 (8bpp) (BGHOFS=8)", NULL }
+    { "BG3 (8bpp)", NULL }
   };
 
   const struct TestData tests[] = {
-    { MODE_0 | BG0_ENABLE, BG_16_COLOR, 0 },
-    { MODE_0 | BG1_ENABLE, BG_16_COLOR, 0 },
-    { MODE_0 | BG2_ENABLE, BG_16_COLOR, 0 },
-    { MODE_0 | BG3_ENABLE, BG_16_COLOR, 0 },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 0 },
-    { MODE_0 | BG1_ENABLE, BG_256_COLOR, 0 },
-    { MODE_0 | BG2_ENABLE, BG_256_COLOR, 0 },
-    { MODE_0 | BG3_ENABLE, BG_256_COLOR, 0 },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 1 },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 2 },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 3 },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 4 },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 5 },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 6 },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 7 },
-    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 8 }
+    { MODE_0 | BG0_ENABLE, BG_16_COLOR },
+    { MODE_0 | BG1_ENABLE, BG_16_COLOR },
+    { MODE_0 | BG2_ENABLE, BG_16_COLOR },
+    { MODE_0 | BG3_ENABLE, BG_16_COLOR },
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR },
+    { MODE_0 | BG1_ENABLE, BG_256_COLOR },
+    { MODE_0 | BG2_ENABLE, BG_256_COLOR },
+    { MODE_0 | BG3_ENABLE, BG_256_COLOR }
   };
 
-  int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
+  while(true) {
+    int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
 
-  if (option != -1) {
+    if (option == -1) {
+      break;
+    }
+
     struct TestData const* test = &tests[option];
+
+    int bghofs = 0;
+    bool should_redraw = true;
+
+    // TODO: move this numeric selector into its own UI function
+    while(true) {
+      scanKeys();
+
+      u16 up = keysUp();
+
+      if(up & KEY_A) break;
+      if(up & KEY_LEFT ) { bghofs--; should_redraw = true; }
+      if(up & KEY_RIGHT) { bghofs++; should_redraw = true; }
+
+      if(should_redraw) {
+        if(bghofs < 0) bghofs = 0;
+        if(bghofs > 8) bghofs = 8;
+
+        ui_clear();
+        printf("BGHOFS: %d\n", bghofs);
+        should_redraw = false;
+      }
+
+      // VBlankIntrWait();
+    }
 
     REG_DISPCNT = test->dispcnt;
     REG_BG0CNT = test->bgcnt;
     REG_BG1CNT = test->bgcnt;
     REG_BG2CNT = test->bgcnt;
     REG_BG3CNT = test->bgcnt;
-
-    REG_BG0HOFS = test->bghofs;
+    REG_BG0HOFS = bghofs;
+    REG_BG1HOFS = bghofs;
+    REG_BG2HOFS = bghofs;
+    REG_BG3HOFS = bghofs;
 
     __test_accesses(1, 0x06000000);
     REG_BG0HOFS = 0; // TODO: fix this properly
+    REG_BG1HOFS = 0;
+    REG_BG2HOFS = 0;
+    REG_BG3HOFS = 0;
   }
 }
 
