@@ -26,15 +26,27 @@ int ui_show_menu(UIMenuOption const* options, size_t length, bool may_return) {
   size_t option = 0;
   bool should_redraw = true;
 
+  const size_t max_items = 20;
+
+  size_t start = 0;
+
   while (true) {
     if (should_redraw) {
       ui_clear();
 
-      for (size_t i = 0; i < length; i++) {
-        if (i == option) {
-          printf("> %s\n", options[i].name);
+      for (size_t i = 0; i < max_items; i++) {
+        size_t j = start + i;
+
+        if(j == length) break;
+
+        if (j == option) {
+          printf("> %s", options[j].name);
         } else {
-          printf("  %s\n", options[i].name);
+          printf("  %s", options[j].name);
+        }
+
+        if (i != max_items - 1) {
+          printf("\n");
         }
       }
 
@@ -49,7 +61,15 @@ int ui_show_menu(UIMenuOption const* options, size_t length, bool may_return) {
       should_redraw = true;
       if (option == 0) {
         option = length - 1;
+
+        if (length > max_items) {
+          start = length - max_items;
+        }
       } else {
+        if (option == start) {
+          start--;
+        }
+
         option--;
       }
     }
@@ -57,8 +77,12 @@ int ui_show_menu(UIMenuOption const* options, size_t length, bool may_return) {
     if (keys_up & KEY_DOWN) {
       should_redraw = true;
       option++;
+
       if (option == length) {
         option = 0;
+        start = 0;
+      } else if (option == (start + max_items)) {
+        start++;
       }
     }
 
