@@ -109,9 +109,14 @@ static void test_mode0_accesses() {
     { "BG1 (8bpp)", NULL },
     { "BG2 (8bpp)", NULL },
     { "BG3 (8bpp)", NULL },
-    { "BG0 (4bpp) (BGHOFS=1)", NULL },
-    { "BG0 (4bpp) (BGHOFS=2)", NULL },
-    { "BG0 (4bpp) (BGHOFS=8)", NULL }
+    { "BG0 (8bpp) (BGHOFS=1)", NULL },
+    { "BG0 (8bpp) (BGHOFS=2)", NULL },
+    { "BG0 (8bpp) (BGHOFS=3)", NULL },
+    { "BG0 (8bpp) (BGHOFS=4)", NULL },
+    { "BG0 (8bpp) (BGHOFS=5)", NULL },
+    { "BG0 (8bpp) (BGHOFS=6)", NULL },
+    { "BG0 (8bpp) (BGHOFS=7)", NULL },
+    { "BG0 (8bpp) (BGHOFS=8)", NULL }
   };
 
   const struct TestData tests[] = {
@@ -123,9 +128,14 @@ static void test_mode0_accesses() {
     { MODE_0 | BG1_ENABLE, BG_256_COLOR, 0 },
     { MODE_0 | BG2_ENABLE, BG_256_COLOR, 0 },
     { MODE_0 | BG3_ENABLE, BG_256_COLOR, 0 },
-    { MODE_0 | BG0_ENABLE, BG_16_COLOR, 1 },
-    { MODE_0 | BG0_ENABLE, BG_16_COLOR, 2 },
-    { MODE_0 | BG0_ENABLE, BG_16_COLOR, 8 }
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 1 },
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 2 },
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 3 },
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 4 },
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 5 },
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 6 },
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 7 },
+    { MODE_0 | BG0_ENABLE, BG_256_COLOR, 8 }
   };
 
   int option = ui_show_menu(options, sizeof(options) / sizeof(UIMenuOption), true);
@@ -461,6 +471,10 @@ void IWRAM_CODE test_dispcnt_latch_bg_vram_fetch() {
   u16 saved_dispcnt = REG_DISPCNT;
 
   REG_DISPCNT &= ~BG_ALL_ON;
+  REG_BG0HOFS = 7;
+  REG_BG1HOFS = 7;
+  REG_BG2HOFS = 7;
+  REG_BG3HOFS = 7;
 
   REG_DMA0SAD = 0x06000000;
   REG_DMA0DAD = 0x06000000;
@@ -498,6 +512,10 @@ void IWRAM_CODE test_dispcnt_latch_bg_vram_fetch() {
 
   REG_TM0CNT_H = 0;
   REG_DISPCNT = saved_dispcnt;
+  REG_BG0HOFS = 0;
+  REG_BG1HOFS = 0;
+  REG_BG2HOFS = 0;
+  REG_BG3HOFS = 0;
 
   ui_clear();
   printf("%d %d %d %d\n", results[0], results[1], results[2], results[3]);
