@@ -13,10 +13,10 @@
   REG_TM0CNT_L = 0;
   REG_TM0CNT_H = TIMER_START;
 
-  REG_DMA0SAD = (u32)&REG_TM0CNT_L;
-  REG_DMA0DAD = (u32)&result;
-  REG_DMA0CNT = DMA_ENABLE | DMA16 | DMA_IMMEDIATE | 1;
-  while (REG_DMA0CNT & DMA_ENABLE);
+  REG_DMA1SAD = (u32)&REG_TM0CNT_L;
+  REG_DMA1DAD = (u32)&result;
+  REG_DMA1CNT = DMA_ENABLE | DMA16 | DMA_IMMEDIATE | 1;
+  while (REG_DMA1CNT & DMA_ENABLE);
 
   test_expect("IMM", 20, result);
 }*/
@@ -33,14 +33,14 @@ void __attribute__((naked)) __attribute__ ((noinline)) __test(u32 address, u32 v
 }
 
 void test_ewram() {
-  REG_DMA0SAD = 0x02000000;
-  REG_DMA0DAD = 0x02000000;
+  REG_DMA1SAD = 0x02000000;
+  REG_DMA1DAD = 0x02000000;
 
   REG_TM0CNT_H = 0;
   REG_TM0CNT_L = 0;
   REG_TM0CNT_H = TIMER_START;
 
-  __test((u32)&REG_DMA0CNT, DMA_ENABLE | DMA16 | DMA_IMMEDIATE | 1);
+  __test((u32)&REG_DMA1CNT, DMA_ENABLE | DMA16 | DMA_IMMEDIATE | 1);
 
   u16 result = REG_TM0CNT_L;
 
@@ -49,18 +49,18 @@ void test_ewram() {
 
 void test_rom() {
   u16 tmp;
-  REG_DMA0SAD = 0x08000000;
-  REG_DMA0DAD = (u32)&tmp;
+  REG_DMA1SAD = 0x08000000;
+  REG_DMA1DAD = (u32)&tmp;
 
   REG_TM0CNT_H = 0;
   REG_TM0CNT_L = 0;
   REG_TM0CNT_H = TIMER_START;
 
-  __test((u32)&REG_DMA0CNT, DMA_ENABLE | DMA16 | DMA_IMMEDIATE | 1);
+  __test((u32)&REG_DMA1CNT, DMA_ENABLE | DMA16 | DMA_IMMEDIATE | 1);
 
   u16 result = REG_TM0CNT_L;
 
-  test_expect("ROM DMA", 84, result);
+  test_expect("ROM DMA", 88, result);
 }
 
 int main(void) {
