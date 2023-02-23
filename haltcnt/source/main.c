@@ -1,5 +1,6 @@
 #include <gba_base.h>
 #include <gba_console.h>
+#include <gba_dma.h>
 #include <gba_interrupt.h>
 #include <gba_systemcalls.h>
 #include <gba_timers.h>
@@ -66,6 +67,31 @@ IWRAM_CODE void test_haltcnt_cpuset() {
   test_expect("POSTFLG", 1, REG_POSTFLG);
 }
 
+IWRAM_CODE void test_haltcnt_cpuset_dma() {
+  // synchronize to scanline start
+  while (REG_VCOUNT != 0) ;
+  while (REG_VCOUNT != 1) ;
+
+  // acknowledge all pending IRQs
+  REG_IF = 0xFFFF;
+
+  // start timer
+  REG_TM0CNT_H = 0;
+  REG_TM0CNT_L = 0;
+  REG_TM0CNT_H = TIMER_START;
+
+  u16 tmp1 = 0;
+  REG_DMA0SAD = (u32)&tmp1;
+  REG_DMA0DAD = (u32)&REG_POSTFLG;
+  u32 tmp2 = DMA_ENABLE | DMA16 | 1;
+  CpuSet(&tmp2, (void*)&REG_DMA0CNT, 2);
+
+  u16 result = REG_TM0CNT_L;
+
+  test_expect_range("HALTCNT CPUSET DMA", 900, 1100, result);
+}
+
+
 __attribute__((optimize("O0"))) IWRAM_CODE void test_haltcnt_timing_iwram() {
   u16 tmp;
 
@@ -123,6 +149,7 @@ IWRAM_CODE int main(void) {
 
   test_haltcnt_direct();
   test_haltcnt_cpuset();
+  test_haltcnt_cpuset_dma();
   test_haltcnt_timing_iwram();
   test_haltcnt_timing_rom();
   test_print_metrics();
