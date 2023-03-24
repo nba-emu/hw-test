@@ -21,65 +21,71 @@ IWRAM_CODE void cpu_irq_disable() {
 }
 
 IWRAM_CODE void test_haltcnt_direct() {
-  // synchronize to scanline start
-  while (REG_VCOUNT != 0) ;
-  while (REG_VCOUNT != 1) ;
-
-  // acknowledge all pending IRQs
+  // acknowledge all pending IRQs and enable TM1 IRQ
   REG_IF = 0xFFFF;
+  REG_IE = IRQ_TIMER1;
 
   // start timer
   REG_TM0CNT_H = 0;
   REG_TM0CNT_L = 0;
   REG_TM0CNT_H = TIMER_START;
 
-  // wait until H-blank IRQ
+  // start timer for raising an IRQ
+  REG_TM1CNT = 0;
+  REG_TM1CNT_L = 0xFF00;
+  REG_TM1CNT_H = TIMER_START | TIMER_IRQ;
+
+  // wait for timer IRQ
   REG_HALTCNT = 0;
 
   u16 result = REG_TM0CNT_L;
 
-  test_expect_range("HALTCNT DIRECT", 0, 16, result);
+  test_expect("HALTCNT DIRECT", 12, result);
 }
 
 IWRAM_CODE void test_haltcnt_cpuset() {
-  // synchronize to scanline start
-  while (REG_VCOUNT != 0) ;
-  while (REG_VCOUNT != 1) ;
-
-  // acknowledge all pending IRQs
+  // acknowledge all pending IRQs and enable TM1 IRQ
   REG_IF = 0xFFFF;
+  REG_IE = IRQ_TIMER1;
 
   // start timer
   REG_TM0CNT_H = 0;
   REG_TM0CNT_L = 0;
   REG_TM0CNT_H = TIMER_START;
 
-  // wait until H-blank IRQ
-  // HALTCNT is in the upper byte of POSTFLG
+  // start timer for raising an IRQ
+  REG_TM1CNT = 0;
+  REG_TM1CNT_L = 0xF000;
+  REG_TM1CNT_H = TIMER_START | TIMER_IRQ;
+
+  // wait for timer IRQ
   u16 tmp = 0;
   CpuSet(&tmp, (void*)&REG_POSTFLG, 1);
 
   u16 result = REG_TM0CNT_L;
 
-  test_expect_range("HALTCNT CPUSET", 900, 1100, result);
+  test_expect("HALTCNT CPUSET", 4155, result);
 
   // make sure that the CpuSet doesn't unset POSTFLAG.
   test_expect("POSTFLG", 1, REG_POSTFLG);
 }
 
 IWRAM_CODE void test_haltcnt_cpuset_dma() {
-  // synchronize to scanline start
-  while (REG_VCOUNT != 0) ;
-  while (REG_VCOUNT != 1) ;
-
-  // acknowledge all pending IRQs
+  // acknowledge all pending IRQs and enable TM1 IRQ
   REG_IF = 0xFFFF;
+  REG_IE = IRQ_TIMER1;
 
   // start timer
   REG_TM0CNT_H = 0;
   REG_TM0CNT_L = 0;
   REG_TM0CNT_H = TIMER_START;
 
+  // start timer for raising an IRQ
+  REG_TM1CNT = 0;
+  REG_TM1CNT_L = 0xF000;
+  REG_TM1CNT_H = TIMER_START | TIMER_IRQ;
+
+  // wait for timer IRQ
   u16 tmp1 = 0;
   REG_DMA0SAD = (u32)&tmp1;
   REG_DMA0DAD = (u32)&REG_POSTFLG;
@@ -88,7 +94,7 @@ IWRAM_CODE void test_haltcnt_cpuset_dma() {
 
   u16 result = REG_TM0CNT_L;
 
-  test_expect_range("HALTCNT CPUSET DMA", 900, 1100, result);
+  test_expect("HALTCNT CPUSET DMA", 4154, result);
 }
 
 
@@ -144,8 +150,8 @@ IWRAM_CODE int main(void) {
   // enable H-blank IRQ and disable all other IRQs
   cpu_irq_disable();  // disable actual CPU IRQs as well
   REG_IME = 0;
-  REG_IE = IRQ_HBLANK;
-  REG_DISPSTAT = LCDC_HBL;
+  // REG_IE = IRQ_HBLANK;
+  // REG_DISPSTAT = LCDC_HBL;
 
   test_haltcnt_direct();
   test_haltcnt_cpuset();
