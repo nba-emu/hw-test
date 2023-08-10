@@ -49,7 +49,7 @@ IWRAM_CODE int main(void) {
   u16 ldm_0803FFF0 = time(ldm, 0x0803FFF0);
   u16 ldm_0803FFF8 = time(ldm, 0x0803FFF8);
 
-  u16 dma_07FFFFF8 = time(dma, 0x07FFFFF7);
+  u16 dma_07FFFFF8 = time(dma, 0x07FFFFF8);
   u16 dma_080003F8 = time(dma, 0x080003F8);
   u16 dma_0801FFF0 = time(dma, 0x0801FFF0);
   u16 dma_0801FFF8 = time(dma, 0x0801FFF8);
@@ -63,7 +63,7 @@ IWRAM_CODE int main(void) {
   test_expect("LDM 0803FFF0", 38, ldm_0803FFF0);
   test_expect("LDM 0803FFF8", 40, ldm_0803FFF8);
 
-  test_expect("DMA 07FFFFF8", 52, dma_07FFFFF8);
+  test_expect("DMA 07FFFFF8", 57, dma_07FFFFF8);
   test_expect("DMA 080003F8", 67, dma_080003F8);
   test_expect("DMA 0801FFF0", 67, dma_0801FFF0);
   test_expect("DMA 0801FFF8", 69, dma_0801FFF8);
