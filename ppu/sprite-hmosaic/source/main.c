@@ -34,31 +34,48 @@ int main(void) {
   irqSet(IRQ_HBLANK, hblank_handler);
   irqEnable(IRQ_HBLANK | IRQ_VBLANK);
 
-  REG_DISPCNT = BG2_ENABLE | OBJ_ENABLE | OBJ_1D_MAP | OBJ_WIN_ENABLE | 3;
-  REG_WINOUT = 0x04FF;
-  REG_BG2CNT = 0;
+  REG_DISPCNT = OBJ_ENABLE | OBJ_1D_MAP | 3;
 
   make_obj_palette();
   make_sprite_tile();
 
   for(int i = 0; i < 16; i++) {
-    OAM[i*4+0].attr0 = OBJ_Y(1 + i * 10);
-    OAM[i*4+0].attr1 = OBJ_X(8) | OBJ_SIZE(0);
-    OAM[i*4+0].attr2 = OBJ_CHAR(512);
+    OAM[i*8+0].attr0 = OBJ_Y(1 + i * 10);
+    OAM[i*8+0].attr1 = OBJ_X(8) | OBJ_SIZE(0);
+    OAM[i*8+0].attr2 = OBJ_CHAR(512);
 
-    OAM[i*4+1].attr0 = OBJ_Y(1 + i * 10) | OBJ_MOSAIC;
-    OAM[i*4+1].attr1 = OBJ_X(16) | OBJ_SIZE(0);
-    OAM[i*4+1].attr2 = OBJ_CHAR(512);
+    OAM[i*8+1].attr0 = OBJ_Y(1 + i * 10) | OBJ_MOSAIC;
+    OAM[i*8+1].attr1 = OBJ_X(16) | OBJ_SIZE(0);
+    OAM[i*8+1].attr2 = OBJ_CHAR(512);
 
-    OAM[i*4+2].attr0 = OBJ_Y(1 + i * 10) | OBJ_MOSAIC;
-    OAM[i*4+2].attr1 = OBJ_X(24) | OBJ_SIZE(0);
-    OAM[i*4+2].attr2 = OBJ_CHAR(512);
+    OAM[i*8+2].attr0 = OBJ_Y(1 + i * 10) | OBJ_MOSAIC;
+    OAM[i*8+2].attr1 = OBJ_X(24) | OBJ_SIZE(0);
+    OAM[i*8+2].attr2 = OBJ_CHAR(512);
 
-    OAM[i*4+3].attr0 = OBJ_Y(1 + i * 10);
-    OAM[i*4+3].attr1 = OBJ_X(32) | OBJ_SIZE(0);
-    OAM[i*4+3].attr2 = OBJ_CHAR(512);
+    OAM[i*8+3].attr0 = OBJ_Y(1 + i * 10);
+    OAM[i*8+3].attr1 = OBJ_X(32) | OBJ_SIZE(0);
+    OAM[i*8+3].attr2 = OBJ_CHAR(512);
+
+// --------
+
+    OAM[i*8+4].attr0 = OBJ_Y(1 + i * 10) | OBJ_MOSAIC;
+    OAM[i*8+4].attr1 = OBJ_X(40) | OBJ_SIZE(0);
+    OAM[i*8+4].attr2 = OBJ_CHAR(512) | OBJ_PRIORITY(2);
+
+    OAM[i*8+5].attr0 = OBJ_Y(1 + i * 10) | OBJ_MOSAIC;
+    OAM[i*8+5].attr1 = OBJ_X(48) | OBJ_SIZE(0);
+    OAM[i*8+5].attr2 = OBJ_CHAR(512) | OBJ_PRIORITY(0);
+
+    OAM[i*8+6].attr0 = OBJ_Y(1 + i * 10) | OBJ_MOSAIC;
+    OAM[i*8+6].attr1 = OBJ_X(56) | OBJ_SIZE(0);
+    OAM[i*8+6].attr2 = OBJ_CHAR(512) | OBJ_PRIORITY(0);
+
+    OAM[i*8+7].attr0 = OBJ_Y(1 + i * 10) | OBJ_MOSAIC;
+    OAM[i*8+7].attr1 = OBJ_X(64) | OBJ_SIZE(0);
+    OAM[i*8+7].attr2 = OBJ_CHAR(512) | OBJ_PRIORITY(1);
   }
 
+/*
   ((OBJAFFINE*)OAM)[0].pa =  0xB5;
   ((OBJAFFINE*)OAM)[0].pb = -0xB5;
   ((OBJAFFINE*)OAM)[0].pc =  0xB5;
@@ -73,6 +90,7 @@ int main(void) {
     OAM[i*2+65].attr1 = OBJ_X(70) | OBJ_SIZE(0);
     OAM[i*2+65].attr2 = OBJ_CHAR(512);
   }
+*/
 
   while(true) {
     asm volatile("nop\n"); // infinite loops are not UB if we add NOPs to them, right? :o
